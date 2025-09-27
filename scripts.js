@@ -3,18 +3,30 @@ function toggleMobileMenu() {
     const btn = document.getElementById('mobile-menu-button');
     if (!menu) return;
     const willOpen = !menu.classList.contains('open');
+    // Guard: ignore an immediate close that happens right after opening.
+    // Some mobile browsers synthesize multiple events which can cause a
+    // close to fire milliseconds after open; we treat those as no-ops.
+    if (!willOpen && menu.__justOpened) {
+        // If a close is requested while we're in the 'just opened' window, ignore it.
+        return;
+    }
     // Toggle the menu open/closed
     const header = document.getElementById('main-header');
     if (willOpen) {
         // position menu under header to avoid overlaying the toggle button
         if (header) {
-            const rect = header.getBoundingClientRect();
-            // pageYOffset ensures correct position when page is scrolled
-            menu.style.top = (rect.bottom + window.pageYOffset) + 'px';
+            // Use header height so the absolute-positioned menu inside the header
+            // sits directly below it even when the header is fixed and the page
+            // is scrolled.
+            menu.style.top = header.offsetHeight + 'px';
         }
         // If Tailwind 'hidden' is present, remove it so our CSS can show the menu
         if (menu.classList.contains('hidden')) menu.classList.remove('hidden');
         menu.classList.add('open');
+    // mark as just opened to prevent immediate accidental close; clear shortly after
+    if (menu.__justOpenedTimer) clearTimeout(menu.__justOpenedTimer);
+    menu.__justOpened = true;
+    menu.__justOpenedTimer = setTimeout(() => { menu.__justOpened = false; delete menu.__justOpenedTimer; }, 420);
         if (btn) {
             btn.setAttribute('aria-expanded', 'true');
             btn.classList.add('open');
@@ -35,23 +47,28 @@ function toggleMobileMenu() {
     }
 }
 
-// debounce helper
-function debounce(fn, wait) {
-    let t = null;
-    return function (...args) {
-        if (t) return; // ignore subsequent calls within wait window
-        fn.apply(this, args);
-        t = setTimeout(() => { t = null; }, wait);
-    };
-}
-
-// Attach debounced toggle to button after DOM ready to avoid inline onclick change
+// Initialize mobile menu button: use pointerdown and a short lock to avoid a
+// synthesized click re-triggering the toggle immediately after open.
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('mobile-menu-button');
     if (!btn) return;
-    const debounced = debounce(toggleMobileMenu, 100);
-    // Use pointerup to reduce duplicate touch/click events and attach debounced handler
-    btn.addEventListener('pointerup', debounced);
+    const TOGGLE_LOCK_MS = 420; // longer than the open/close transition
+    const handler = (ev) => {
+        // Prevent the subsequent click event from reaching other handlers/causing re-toggle
+        if (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
+        if (handler.locked) return;
+        handler.locked = true;
+        try {
+            toggleMobileMenu();
+        } finally {
+            setTimeout(() => { handler.locked = false; }, TOGGLE_LOCK_MS);
+        }
+    };
+    // Use pointerdown so we grab the interaction early and prevent the synthesized click
+    btn.addEventListener('pointerdown', handler);
 });
 
 // Adjust mobile menu top on resize while open
@@ -60,10 +77,23 @@ window.addEventListener('resize', () => {
     const header = document.getElementById('main-header');
     if (!menu || !header) return;
     if (menu.classList.contains('open')) {
-        const rect = header.getBoundingClientRect();
-        menu.style.top = (rect.bottom + window.pageYOffset) + 'px';
+        menu.style.top = header.offsetHeight + 'px';
     }
 });
+
+// Ensure main content isn't hidden under the fixed header by adding top padding
+function adjustMainForFixedHeader() {
+    const header = document.getElementById('main-header');
+    const main = document.querySelector('main');
+    if (!header || !main) return;
+    const h = header.getBoundingClientRect().height;
+    // Use CSS variable or inline padding to avoid layout shifts
+    main.style.paddingTop = h + 'px';
+}
+
+window.addEventListener('resize', adjustMainForFixedHeader);
+window.addEventListener('load', adjustMainForFixedHeader);
+document.addEventListener('DOMContentLoaded', adjustMainForFixedHeader);
 
 function smoothScroll(event) {
     if (event) event.preventDefault();

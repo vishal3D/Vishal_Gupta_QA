@@ -32,10 +32,7 @@ body {
     opacity: 1;
     pointer-events: auto;
 }
-/* Ensure header is positioned for absolute mobile menu placement */
-#main-header {
-    position: relative;
-}
+/* Header positioning is handled in HTML (now fixed) so don't override here. */
 
 /* Hamburger icon styling and open -> X animation */
 #mobile-menu-button .hamburger {
