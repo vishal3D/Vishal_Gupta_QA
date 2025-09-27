@@ -14,16 +14,58 @@ body {
 /* Mobile menu animation */
 .mobile-menu {
     /* hidden by default on small screens; JS toggles .open */
+    position: absolute; /* place it outside normal flow so it doesn't block header controls */
+    left: 0;
+    right: 0;
+    top: 100%; /* directly under the header */
+    background: white;
     overflow: hidden;
     max-height: 0;
     opacity: 0;
     pointer-events: none;
     transition: max-height 320ms cubic-bezier(.4,0,.2,1), opacity 220ms ease-in-out;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+    z-index: 40; /* below header (header is z-50) */
 }
 .mobile-menu.open {
     max-height: 1000px; /* large enough to hold content; allows smooth expansion */
     opacity: 1;
     pointer-events: auto;
+}
+/* Ensure header is positioned for absolute mobile menu placement */
+#main-header {
+    position: relative;
+}
+
+/* Hamburger icon styling and open -> X animation */
+#mobile-menu-button .hamburger {
+    display: inline-block;
+    width: 24px;
+    height: 18px;
+    position: relative;
+}
+#mobile-menu-button .bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #065f46; /* emerald-800 */
+    border-radius: 2px;
+    transition: transform 220ms cubic-bezier(.4,0,.2,1), opacity 180ms ease;
+}
+#mobile-menu-button .bar.top { top: 0; }
+#mobile-menu-button .bar.middle { top: 8px; }
+#mobile-menu-button .bar.bottom { top: 16px; }
+
+/* When header button has 'open' class, animate to X */
+#mobile-menu-button.open .bar.top {
+    transform: translateY(8px) rotate(45deg);
+}
+#mobile-menu-button.open .bar.middle {
+    opacity: 0;
+}
+#mobile-menu-button.open .bar.bottom {
+    transform: translateY(-8px) rotate(-45deg);
 }
 /* Style for the timeline dots */
 .timeline-dot::before {
@@ -36,4 +78,11 @@ body {
     background-color: #10b981; /* Emerald-500 for a fresh, professional look */
     border-radius: 50%;
     border: 2px solid #ffffff;
+}
+
+/* Keep the mobile toggle button on top and responsive to touch */
+#mobile-menu-button {
+    position: relative;
+    z-index: 60; /* above header (z-50) and menu (z-40) */
+    touch-action: manipulation;
 }
