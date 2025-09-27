@@ -13,14 +13,17 @@ body {
 /* NOTE: Smooth scrolling is handled via JavaScript to account for the sticky header. */
 /* Mobile menu animation */
 .mobile-menu {
-    display: none; /* hidden by default on small screens; JS toggles display */
+    /* hidden by default on small screens; JS toggles .open */
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 280ms cubic-bezier(.4,0,.2,1), opacity 200ms ease-in-out;
+    pointer-events: none;
+    transition: max-height 320ms cubic-bezier(.4,0,.2,1), opacity 220ms ease-in-out;
 }
 .mobile-menu.open {
+    max-height: 1000px; /* large enough to hold content; allows smooth expansion */
     opacity: 1;
+    pointer-events: auto;
 }
 /* Style for the timeline dots */
 .timeline-dot::before {
