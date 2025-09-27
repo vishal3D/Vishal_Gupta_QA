@@ -11,6 +11,17 @@ body {
     line-height: 1.6;
 }
 /* NOTE: Smooth scrolling is handled via JavaScript to account for the sticky header. */
+/* Mobile menu animation */
+.mobile-menu {
+    display: none; /* hidden by default on small screens; JS toggles display */
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 280ms cubic-bezier(.4,0,.2,1), opacity 200ms ease-in-out;
+}
+.mobile-menu.open {
+    opacity: 1;
+}
 /* Style for the timeline dots */
 .timeline-dot::before {
     content: '';

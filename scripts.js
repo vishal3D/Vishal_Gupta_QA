@@ -2,8 +2,40 @@ function toggleMobileMenu() {
     const menu = document.getElementById('mobile-menu');
     const btn = document.getElementById('mobile-menu-button');
     if (!menu) return;
-    const isHidden = menu.classList.toggle('hidden');
-    if (btn) btn.setAttribute('aria-expanded', String(!isHidden));
+
+    const isOpen = menu.classList.contains('open');
+    if (isOpen) {
+        // close
+        menu.style.maxHeight = menu.scrollHeight + 'px'; // set current for transition
+        // force repaint
+        // eslint-disable-next-line no-unused-expressions
+        menu.offsetHeight;
+        menu.style.maxHeight = '0px';
+        menu.classList.remove('open');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        // after transition remove inline style
+        menu.addEventListener('transitionend', function handler() {
+            menu.style.display = 'none';
+            menu.style.maxHeight = '';
+            menu.removeEventListener('transitionend', handler);
+        });
+    } else {
+        // open
+        menu.style.display = 'block';
+        menu.style.maxHeight = '0px';
+        // force repaint
+        // eslint-disable-next-line no-unused-expressions
+        menu.offsetHeight;
+        const target = menu.scrollHeight + 'px';
+        menu.style.maxHeight = target;
+        menu.classList.add('open');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        menu.addEventListener('transitionend', function handler() {
+            // clear to allow natural height on resizes
+            menu.style.maxHeight = '';
+            menu.removeEventListener('transitionend', handler);
+        });
+    }
 }
 
 function smoothScroll(event) {
